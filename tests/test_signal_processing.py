@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend" / "src"))
 from signal_processing import bandpass_filter, pan_tompkins_qrs, compute_rr_intervals
 
 

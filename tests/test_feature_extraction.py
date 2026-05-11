@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend" / "src"))
 from feature_extraction import (
     extract_features, features_to_vector,
     compute_sqi, FEATURE_COLUMNS

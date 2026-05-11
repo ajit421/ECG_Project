@@ -1,0 +1,51 @@
+# ── Environment & Secrets ─────────────────────────────────────────────────
+.env
+*.env.local
+*.env.production
+
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual Environments ──────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Logs & Sessions ───────────────────────────────────────────────────────
+logs/
+*.csv
+*.log
+
+# ── Pytest ────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Node / React ──────────────────────────────────────────────────────────
+node_modules/
+frontend/react_app/dist/
+frontend/react_app/.env
+
+# ── IDE ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ── OS ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── ML Model Artifacts (large binaries — use Git LFS or separate storage) ─
+# Uncomment below if you move to Git LFS:
+# *.pkl
