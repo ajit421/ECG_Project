@@ -17,6 +17,75 @@ An AI-powered remote ECG monitoring system for hospitals, using Edge AI on a Ras
 
 ---
 
+## 2. Demo Mode — Presentation Guide
+
+> This section is critical for the B.Tech final presentation.
+
+### Demo Mode Architecture
+The `EcgSimulator` class in `backend/src/ecg_simulator.py` loads real MIT-BIH Arrhythmia Database records and streams them through the exact same `ECGInferenceEngine` pipeline as live hardware. This means:
+- The ML model processes real clinical ECG data
+- The signal processing pipeline is identical to live patient mode
+- Predictions are real — not faked or hardcoded
+
+### MIT-BIH Demo Records
+
+| Record | Arrhythmia Type | HR Pattern | Expected Model Response | Best For |
+|--------|----------------|-----------|------------------------|---------|
+| `100`  | Normal Sinus Rhythm | ~75 BPM, regular | "Normal" consistently | Show healthy baseline |
+| `119`  | PVCs (Premature Ventricular Contractions) | Normal with frequent early beats | Oscillates Normal/ABNORMAL | Default demo record |
+| `200`  | Ventricular Bigeminy | Every other beat is PVC | ABNORMAL triggers reliably within 15s | **Best for live demo climax** |
+| `201`  | AFib + PVCs | Highly irregular, varying HR | Strong ABNORMAL, high consecutive count | Most dramatic alert |
+
+**Recommended Demo Script for Professors:**
+1. Start with record `100` (Normal) → show green "Normal" predictions, stable BPM around 75
+2. Explain the system: "This is a healthy patient. The model sees regular HRV patterns."
+3. Click "Switch to Arrhythmia" → system switches to record `200` (Bigeminy)
+4. Within ~15 seconds (3 consecutive windows × 5s each): ABNORMAL triggers
+5. Alert fires → Buzzer sounds on ESP32 → Doctor dashboard on second device shows red alert banner
+6. Show the ground truth tab: "MIT-BIH cardiologist annotated these beats as 'V' (Ventricular). Our model independently detected them as ABNORMAL."
+
+### MIT-BIH Beat Annotation Labels
+When showing ground truth comparison to professors:
+- `N` — Normal beat (model should predict Normal)
+- `V` — Premature Ventricular Contraction (model should predict ABNORMAL)
+- `A` — Atrial Premature Contraction (may trigger ABNORMAL depending on severity)
+- `L` — Left Bundle Branch Block (model should predict ABNORMAL)
+- `R` — Right Bundle Branch Block (model should predict ABNORMAL)
+
+### Model Performance Facts (state these to professors)
+- Trained on MIT-BIH Arrhythmia Database (PhysioNet) — the gold standard clinical ECG dataset
+- Training samples: 8,372 | Test samples: 2,093
+- Test accuracy: **81.6%** | F1 score: **76.8%** | Cross-validated F1: 77.6% ± 0.9%
+- Features: 6 HRV time-domain features (clinically validated, used in cardiology literature)
+- Model: Random Forest (100 trees) — interpretable, no black box
+- Probability threshold: 0.70 (conservative — reduces false positives in a clinical setting)
+
+### Pre-Download Commands (run on RPi before presentation)
+```bash
+# Activate virtual environment
+source ~/ecg_env/bin/activate
+
+# Pre-download all demo records (requires internet, ~50MB total)
+python3 -c "
+import wfdb
+records = ['100', '119', '200', '201']
+for r in records:
+    print(f'Downloading {r}...')
+    wfdb.dl_database('mitdb', dl_dir='demo_data', records=[r])
+    print(f'{r} done.')
+"
+
+# Verify download
+ls demo_data/
+```
+
+### Emergency Fallback (if internet unavailable on demo day)
+`ecg_simulator.py` has a built-in synthetic ECG fallback — if MIT-BIH records can't load, it generates a synthetic waveform that alternates between normal (70 BPM) and fast/irregular (115 BPM) to trigger ABNORMAL detection. **Pre-download the records to avoid needing internet.**
+
+
+
+---
+
 ## 2. Architecture Decision Log
 
 ### v1 (Abandoned) — ESP32 Cloud Approach

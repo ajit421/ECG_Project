@@ -227,6 +227,61 @@
 
 ---
 
+## 🎬 Phase 5g — Demo Mode for Presentation (Satyarth + Deepika)
+> **Critical for B.Tech presentation.** This lets you replay real MIT-BIH patient data through the full system — live, in front of professors — so they can see the model detect a real arrhythmia and fire an alert.
+>
+> **What already exists**: `ecg_simulator.py` already loads MIT-BIH records via `wfdb` and streams them through the ECGInferenceEngine pipeline.
+> **What we are adding**: A controlled, presentation-friendly Demo Control Panel in React that lets you switch patient records mid-demo and trigger arrhythmia detection on command.
+
+### 5g-i — Demo Records to Pre-download (Satyarth)
+> All records are from the free MIT-BIH Arrhythmia Database (PhysioNet). `wfdb` downloads them automatically.
+- [ ] Add `wfdb>=4.1.0` to `backend/requirements.txt` ✅ (already done)
+- [ ] Pre-download and cache these 4 records on the RPi to avoid demo-day network issues:
+  - `100` — **Normal sinus rhythm** (healthy patient reference)
+  - `119` — **PVCs** (Premature Ventricular Contractions — already default in simulator)
+  - `200` — **Ventricular bigeminy** (every other beat is abnormal — most dramatic for demo)
+  - `201` — **Atrial fibrillation + PVCs** (most complex, highest BPM variability)
+- [ ] Pre-download script: `python3 -c "import wfdb; [wfdb.dl_database('mitdb', dl_dir='demo_data', records=[r]) for r in ['100','119','200','201']]"`
+- [ ] Store downloaded records in `backend/demo_data/` (add `backend/demo_data/*.dat` and `*.hea` to `.gitignore`)
+
+### 5g-ii — Enhanced Demo API Endpoints (Satyarth — add to `server.py`)
+- [ ] Add `POST /api/demo/start` endpoint:
+  - Accepts JSON: `{"record": "200", "mode": "mitbih"}` or `{"mode": "synthetic"}`
+  - Stops any running engine, creates new `EcgSimulator` with chosen record, starts engine in demo mode
+  - Returns `{"ok": true, "record": "200", "description": "Ventricular bigeminy — PVC every other beat"}`
+- [ ] Add `POST /api/demo/switch-to-arrhythmia` endpoint:
+  - Mid-stream: replaces the current signal with record `200` (bigeminy) immediately
+  - Used during live presentation: professor sees normal ECG → you click button → arrhythmia starts → alert fires
+- [ ] Add `GET /api/demo/records` endpoint:
+  - Returns list of all available demo records with name, description, arrhythmia type, and expected model response
+- [ ] Add `GET /api/demo/ground-truth` endpoint:
+  - Returns the MIT-BIH expert annotation for the current record at the current playback position (beat labels like `N`, `V`, `A`)
+  - This lets you show professors: "MIT-BIH expert said V (PVC) here, our model says ABNORMAL here — they match"
+
+### 5g-iii — Demo Control Panel in React (Deepika — add to Admin/Doctor UI)
+- [ ] Build `DemoControlPanel.jsx` component (visible only to admin role):
+  - [ ] **Patient Selector**: dropdown showing 4 demo records with description (`Normal`, `PVCs`, `Bigeminy`, `AFib+PVCs`)
+  - [ ] **"Start Demo Patient"** button → calls `POST /api/demo/start` with selected record
+  - [ ] **"Switch to Arrhythmia NOW"** red button → calls `POST /api/demo/switch-to-arrhythmia` (for live demo climax)
+  - [ ] **Model Accuracy Badge**: shows live `{test_accuracy: 81.6%, f1_score: 76.8%}` from `model_metadata.json`
+  - [ ] **Ground Truth indicator**: small label showing current MIT-BIH expert beat annotation for comparison
+- [ ] Add `DemoControlPanel` to the Admin page as a collapsible "Demo Controls" section
+- [ ] Style it differently (e.g., amber/orange background) so it's clearly labeled as demo-only
+
+### 5g-iv — Pre-Presentation Rehearsal Checklist (All — run the day before)
+- [ ] Verify RPi is connected to presentation room's Wi-Fi (or use mobile hotspot as backup)
+- [ ] Run `sudo systemctl status ecg_edge` — confirm service is running
+- [ ] Open `http://<rpi-hostname>.local:5000` on a laptop — confirm connection
+- [ ] Go to Demo Controls → select record `100` (Normal) → click Start → confirm green "Normal" predictions appear
+- [ ] Click "Switch to Arrhythmia" → select record `200` (Bigeminy) → confirm waveform changes and ABNORMAL alerts appear within ~15 seconds
+- [ ] Confirm buzzer fires on ESP32
+- [ ] Confirm alert appears on the Doctor's dashboard on the deployed Vercel URL
+- [ ] Open the Vercel frontend on a second device (phone or laptop) as the Doctor role — confirm alert banner appears
+- [ ] Charge RPi, have USB-C power bank as backup
+- [ ] Commit: `git commit -m "feat(demo): MIT-BIH demo mode API endpoints and control panel"`
+
+---
+
 ## 🚀 Phase 6 — Deployment & Integration Testing (Rupam + All)
 
 ### 6a — Deploy Cloud API to Render
