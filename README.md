@@ -1,44 +1,49 @@
-# AI-Based Real-Time ECG Anomaly Detection System
+# AI-Based Real-Time ECG Anomaly Detection System (v2 Edge Architecture)
 
-> **Final Year Project** — ESP32 + AD8232 + Random Forest + Real-Time Web Dashboard
-Slide :https://docs.google.com/presentation/d/1WCODxqY1NNHRyLQVIZKMnhqAkkMkOI6z_rHUC1bUbVA/edit?usp=sharing
+> **Final Year Project** — Edge AI on Raspberry Pi + React Web Dashboard + MongoDB Cloud
+> Slide: https://docs.google.com/presentation/d/1WCODxqY1NNHRyLQVIZKMnhqAkkMkOI6z_rHUC1bUbVA/edit?usp=sharing
+
 ---
 
-## 🔬 System Overview
+## 🔬 System Overview (v2 Edge AI)
 
 ```
-ECG Electrodes
-  → AD8232 (Signal Conditioning)
-    → ESP32 GPIO34 (12-bit ADC at 250 Hz)
-      → Serial USB (115200 baud)
+[Patient] 
+  → AD8232 ECG Sensor
+    → ESP32 (Dumb USB ADC bridge @ 250Hz)
+      → Raspberry Pi 4B (Local Edge AI Node)
         → Python Pipeline (Filter → Features → Random Forest)
-          → Flask + Socket.IO Web Dashboard + Buzzer Alert
+        → Local Buzzer Alert (immediate)
+        → 5-second Summaries HTTP POST
+          → Render (Cloud REST API)
+            → MongoDB Atlas
+              → Vercel (React Dashboard for Doctors)
 ```
+
+**Why Edge AI?** By running the ML model locally on the Raspberry Pi, the system works offline, prevents cloud latency for alerts, avoids sending massive 250Hz waveform data over the internet, and ensures the Render free tier never times out.
 
 ---
 
-## 📁 Project Structure
+## 📁 Repository Structure
 
+This monorepo serves as our team's planning hub and training environment. The production code has been split into three separate deployment repositories:
+
+| Component | GitHub Repo | Deployment | Description |
+|-----------|-------------|------------|-------------|
+| **Backend** | [satyarth8/ecg-backend](https://github.com/satyarth8/ecg-backend) | Raspberry Pi & Render | Edge inference server + Cloud REST API |
+| **Frontend** | [satyarth8/ecg-frontend](https://github.com/satyarth8/ecg-frontend) | Vercel | Vite/React SPA dashboard |
+| **Firmware** | [satyarth8/ecg-firmware](https://github.com/satyarth8/ecg-firmware) | ESP32 | Arduino sketch for USB ADC reading |
+
+### Local Monorepo Structure:
 ```
 ECG_Project/
-├── firmware/ECG_Firmware/ECG_Firmware.ino   # ESP32 Arduino sketch (Core v3.x ready)
-├── src/
-│   ├── signal_processing.py                 # Butterworth filter + Pan-Tompkins
-│   ├── feature_extraction.py                # 6 HRV features + SQI
-│   ├── realtime_inference.py                # Threaded inference engine
-│   └── ecg_simulator.py                     # MIT-BIH Demo streamer
-├── model/
-│   ├── data_preparation.py                  # MIT-BIH → feature CSV
-│   ├── model_training.py                    # Train Random Forest
-│   └── model_evaluation.py                  # Evaluation + plots
-├── dashboard/
-│   └── index.html                           # Custom HTML/CSS/JS frontend
-├── server.py                                # Flask + Socket.IO backend
-├── logs/                                    # Session CSV logs
-├── assets/                                  # Plots, confusion matrix
-├── tests/                                   # Unit tests
-├── requirements.txt
-└── conftest.py
+├── backend/            # Edge server & Cloud API (matches ecg-backend repo)
+├── frontend/           # React dashboard (matches ecg-frontend repo)
+├── firmware/           # ESP32 code (matches ecg-firmware repo)
+├── ml_training/        # Training scripts & MIT-BIH dataset (Local only)
+├── .env.example        # Environment variable template
+├── knowledge_base.md   # Single source of truth for schemas & APIs
+└── todo_Feature.md     # Phase-by-phase task tracking
 ```
 
 ---
@@ -52,60 +57,35 @@ ECG_Project/
 | **OUTPUT** | **GPIO34** | ADC input-only, 12-bit |
 | **LO+** | **GPIO32** | Lead-off detection |
 | **LO-** | **GPIO33** | Lead-off detection |
-| **SDN** | — | **Not connected** (Optional) |
 
 **Buzzer (5V Active Type):**
-Requires a transistor (BC547/2N2222) switching circuit driven by **GPIO25**.
+Requires a transistor (BC547/2N2222) switching circuit driven by **GPIO25** on the ESP32.
 
 ---
 
 ## 🛠 Setup & Installation
 
-### 1. Install Python dependencies
-```bash
-cd E:\Project\ECG_Project
-pip install -r requirements.txt
-```
+### 1. Edge Node (Raspberry Pi 4B)
+1. Flash **Raspberry Pi OS 64-bit**.
+2. Clone `ecg-backend` to the Pi.
+3. Install dependencies: `pip install -r requirements.txt` (includes `scikit-learn`, `flask`, `pymongo`).
+4. Copy `.env.example` to `.env` and fill in `MONGO_URI`, `EDGE_DEVICE_ID`, and `SERIAL_PORT`.
+5. Run `python server.py`.
 
-### 2. Flash ESP32 firmware
-- Open `firmware/ECG_Firmware/ECG_Firmware.ino` in Arduino IDE
-- Install **ESP32 board package** (v3.2.0 or later)
-- Select board: `ESP32 Dev Module`
-- Set baud: `115200`
-- Upload
+### 2. Cloud API (Render)
+1. Connect Render to the `ecg-backend` repo.
+2. Set build/start command to `python cloud_api.py`.
+3. Set environment variables (`MONGO_URI`, `JWT_SECRET`, `EDGE_KEY`).
 
-### 3. Train the AI model (one-time setup)
-Downloads the MIT-BIH dataset from PhysioNet and trains the Random Forest classifier.
-```bash
-cd E:\Project\ECG_Project\model
-python data_preparation.py
-python model_training.py
-python model_evaluation.py
-```
+### 3. Frontend (Vercel)
+1. Connect Vercel to the `ecg-frontend` repo.
+2. Set environment variable `VITE_API_BASE_URL` to your Render API URL.
+3. Deploy.
 
----
-
-## 🖥 Running the Dashboard
-
-We use a custom, high-performance web dashboard over WebSockets (no page reloads).
-
-### 1. Start the Server
-```bash
-cd E:\Project\ECG_Project
-python server.py
-```
-
-### 2. Open the Interface
-Open your web browser and navigate to:
-**http://localhost:5000**
-
-### 3. Controls
-| Feature | Location |
-|---|---|
-| Demo Mode (no hardware) | Sidebar toggle — **enabled by default** |
-| Live hardware mode | Disable Demo Mode → enter COM port (e.g., `COM3`) |
-| Start/Stop engine | Sidebar buttons |
-| Calibration (30s baseline) | Sidebar → Calibrate button (Personalizes alerts) |
+### 4. ESP32 Firmware
+1. Open `ECG_Firmware.ino` from the `ecg-firmware` repo in Arduino IDE.
+2. Flash to ESP32 (baud rate 115200). 
+3. Connect ESP32 to Raspberry Pi via USB cable.
 
 ---
 
@@ -116,10 +96,10 @@ Open your web browser and navigate to:
 | Algorithm | Random Forest (scikit-learn) |
 | Trees | 100 |
 | Features | 6 HRV features |
-| Training data | MIT-BIH Arrhythmia Dataset (15 records) |
-| Labels | Normal (0) / Abnormal (1) |
+| Training data | MIT-BIH Arrhythmia Dataset (PhysioNet) |
+| Performance | Accuracy: 81.6%  \|  F1: 76.8% |
 | Alert threshold | P(abnormal) > **0.70** |
-| Alert trigger | **3 consecutive** abnormal windows |
+| Alert trigger | **3 consecutive** abnormal 5-second windows |
 
 ---
 
@@ -132,24 +112,21 @@ Open your web browser and navigate to:
 | Feature extraction | HRV time-domain | 5-second windows, 50% overlap |
 | Normalisation | StandardScaler | Fitted on MIT-BIH training data |
 
----
-
-## 📊 Features Extracted
-
-1. `heart_rate` — BPM
-2. `rr_mean` — Mean RR interval (ms)
-3. `rr_std` — RR variability (ms)
-4. `sdnn` — Std deviation of NN intervals
-5. `rmssd` — Root mean square of successive differences
-6. `beat_variance` — Beat-to-beat interval variance
+**Extracted Features:** `heart_rate`, `rr_mean`, `rr_std`, `sdnn`, `rmssd`, `beat_variance`.
 
 ---
 
-## 🧪 Running Unit Tests
-```bash
-cd E:\Project\ECG_Project
-pytest tests/ -v
-```
+## 🎬 Presentation Demo Mode
+
+For final year project presentations, the system includes a Demo Mode that streams real MIT-BIH clinical data through the ML pipeline, proving the model's efficacy without needing a patient with a real arrhythmia.
+
+Available Demo Records:
+- `100` — Normal sinus rhythm
+- `119` — PVCs
+- `200` — Ventricular Bigeminy (Best for live demo climax)
+- `201` — AFib + PVCs
+
+*(See `knowledge_base.md` for full demo script and instructions).*
 
 ---
 
@@ -159,7 +136,3 @@ pytest tests/ -v
 - AD8232 single-lead setup is NOT reliable for P-wave or ST-segment analysis.
 - The model must always be used with its paired `scaler_v1.pkl` for normalisation.
 - Buzzer activates after **3 consecutive abnormal windows** (~15 seconds) to prevent false alarms.
-- If electrodes are disconnected, inference is automatically paused.
-
----
-*Built with Python 3.11 · scikit-learn · Flask · Socket.IO · wfdb*
