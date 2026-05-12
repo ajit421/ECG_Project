@@ -49,3 +49,6 @@ Thumbs.db
 # ── ML Model Artifacts (large binaries — use Git LFS or separate storage) ─
 # Uncomment below if you move to Git LFS:
 # *.pkl
+
+# repos
+repos/
