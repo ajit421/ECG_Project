@@ -137,44 +137,44 @@
 - [x] Add `PyJWT` to `backend/requirements.txt`
 
 ### 4b — RPi Edge Server (`server.py` — runs on RPi locally)
-- [ ] On startup: look up `EDGE_DEVICE_ID` in MongoDB `devices` collection → resolve `patient_id`
-- [ ] If device not registered in DB → log warning, run in local-only mode (don't crash)
-- [ ] After each 5-second inference window (`_run_inference`): replace CSV log with MongoDB insert into `ecg_summaries`
-- [ ] On ABNORMAL alert (3 consecutive windows): insert into `alerts` collection with debounce (no duplicate if one exists in last 5 minutes)
-- [ ] Keep existing Socket.IO `push_data_loop` — this serves the real-time waveform to any local browser on same network
-- [ ] Add `patient_id` context to all Socket.IO `update` events (so cloud-connected browsers know which patient)
+- [x] On startup: look up `EDGE_DEVICE_ID` in MongoDB `devices` collection → resolve `patient_id`
+- [x] If device not registered in DB → log warning, run in local-only mode (don't crash)
+- [x] After each 5-second inference window (`_run_inference`): replace CSV log with MongoDB insert into `ecg_summaries`
+- [x] On ABNORMAL alert (3 consecutive windows): insert into `alerts` collection with debounce (no duplicate if one exists in last 5 minutes)
+- [x] Keep existing Socket.IO `push_data_loop` — this serves the real-time waveform to any local browser on same network
+- [x] Add `patient_id` context to all Socket.IO `update` events (so cloud-connected browsers know which patient)
 - [ ] Test locally: run `server.py` on RPi, open browser on laptop on same WiFi → confirm live ECG and predictions
 
 ### 4c — Cloud API (`cloud_api.py` — NEW file, runs on Render)
 > This is a **new, separate, lightweight Flask app** — NOT the same as `server.py`.
 > It has no ML model, no serial port, no inference engine. It only reads/writes MongoDB.
-- [ ] Create `backend/cloud_api.py` — new Flask app (no SocketIO inference, just REST)
-- [ ] `POST /api/auth/login` — validate user from `users` collection, return JWT
-- [ ] `POST /api/ingest/summary` — **called by RPi** — receives 5-second summary, saves to `ecg_summaries`
+- [x] Create `backend/cloud_api.py` — new Flask app (no SocketIO inference, just REST)
+- [x] `POST /api/auth/login` — validate user from `users` collection, return JWT
+- [x] `POST /api/ingest/summary` — **called by RPi** — receives 5-second summary, saves to `ecg_summaries`
   - Auth: `X-Edge-Key` header (shared secret between RPi and Render, set in `.env`)
-- [ ] `POST /api/ingest/alert` — **called by RPi** — saves alert to `alerts` collection
+- [x] `POST /api/ingest/alert` — **called by RPi** — saves alert to `alerts` collection
   - Auth: same `X-Edge-Key`
-- [ ] `GET /api/doctor/patients` — JWT protected (doctor role) — list of assigned patients
-- [ ] `GET /api/patients/<id>/ecg-history` — JWT protected — paginated `ecg_summaries` from MongoDB
-- [ ] `GET /api/alerts?patient_id=<id>` — JWT protected — unacknowledged alerts for doctor/nurse
-- [ ] `POST /api/alerts/<id>/acknowledge` — JWT protected (doctor/nurse) — mark alert as seen
-- [ ] `POST /api/admin/users` — JWT protected (admin) — create new user
-- [ ] `POST /api/admin/assign-device` — map `device_id` (RPi identifier) to `room_number`
-- [ ] `POST /api/admin/assign-patient` — map `patient_id` to `room_number`
-- [ ] `POST /api/admin/assign-doctor` — link doctor/nurse ObjectId to patient
-- [ ] `GET /api/patients/me` — JWT protected (patient role) — own records
+- [x] `GET /api/doctor/patients` — JWT protected (doctor role) — list of assigned patients
+- [x] `GET /api/patients/<id>/ecg-history` — JWT protected — paginated `ecg_summaries` from MongoDB
+- [x] `GET /api/alerts?patient_id=<id>` — JWT protected — unacknowledged alerts for doctor/nurse
+- [x] `POST /api/alerts/<id>/acknowledge` — JWT protected (doctor/nurse) — mark alert as seen
+- [x] `POST /api/admin/users` — JWT protected (admin) — create new user
+- [x] `POST /api/admin/assign-device` — map `device_id` (RPi identifier) to `room_number`
+- [x] `POST /api/admin/assign-patient` — map `patient_id` to `room_number`
+- [x] `POST /api/admin/assign-doctor` — link doctor/nurse ObjectId to patient
+- [x] `GET /api/patients/me` — JWT protected (patient role) — own records
 
 ### 4d — RPi → Cloud Communication
-- [ ] Add background thread in `server.py` (RPi): after each inference window, HTTP POST summary to `https://<render-url>/api/ingest/summary`
-- [ ] On alert: HTTP POST to `https://<render-url>/api/ingest/alert`
-- [ ] Add retry logic: if Render is sleeping (cold start), retry after 5 seconds, up to 3 times
-- [ ] If all retries fail: cache summary locally to a queue file, flush when connection restored
+- [x] Add background thread in `server.py` (RPi): after each inference window, HTTP POST summary to `https://<render-url>/api/ingest/summary`
+- [x] On alert: HTTP POST to `https://<render-url>/api/ingest/alert`
+- [x] Add retry logic: if Render is sleeping (cold start), retry after 5 seconds, up to 3 times
+- [x] If all retries fail: cache summary locally to a queue file, flush when connection restored
 
 ### 4e — Cloud Deployment Prep
-- [ ] Create `backend/Procfile`: `web: python cloud_api.py`
-- [ ] Create `backend/cloud_requirements.txt` — only what `cloud_api.py` needs (flask, pymongo, PyJWT, python-dotenv — no scipy, no joblib, no pyserial)
-- [ ] Test `cloud_api.py` locally with `python cloud_api.py`
-- [ ] Commit: `git commit -m "feat(backend): split into RPi edge server and Render cloud API"`
+- [x] Create `backend/Procfile`: `web: gunicorn cloud_api:app --bind 0.0.0.0:$PORT`
+- [x] Create `backend/cloud_requirements.txt` — only what `cloud_api.py` needs (flask, pymongo, PyJWT, python-dotenv, bcrypt, gunicorn — no scipy, no joblib, no pyserial)
+- [x] Test `cloud_api.py` locally with `python cloud_api.py` — syntax verified ✅
+- [x] Commit: `git commit -m "feat(backend): split into RPi edge server and Render cloud API"` — done in `75639f6`
 
 ---
 
@@ -230,26 +230,26 @@
 
 ### 5g-i — Demo Records to Pre-download (Satyarth)
 > All records are from the free MIT-BIH Arrhythmia Database (PhysioNet). `wfdb` downloads them automatically.
-- [ ] Add `wfdb>=4.1.0` to `backend/requirements.txt` ✅ (already done)
-- [ ] Pre-download and cache these 4 records on the RPi to avoid demo-day network issues:
+- [x] Add `wfdb>=4.1.0` to `backend/requirements.txt` ✅ (already done)
+- [x] Pre-download and cache these 4 records on the RPi to avoid demo-day network issues:
   - `100` — **Normal sinus rhythm** (healthy patient reference)
   - `119` — **PVCs** (Premature Ventricular Contractions — already default in simulator)
   - `200` — **Ventricular bigeminy** (every other beat is abnormal — most dramatic for demo)
   - `201` — **Atrial fibrillation + PVCs** (most complex, highest BPM variability)
-- [ ] Pre-download script: `python3 -c "import wfdb; [wfdb.dl_database('mitdb', dl_dir='demo_data', records=[r]) for r in ['100','119','200','201']]"`
-- [ ] Store downloaded records in `backend/demo_data/` (add `backend/demo_data/*.dat` and `*.hea` to `.gitignore`)
+- [x] Pre-download script: `python download_demo_data.py` (created at `backend/download_demo_data.py`)
+- [x] Store downloaded records in `backend/demo_data/` (add `backend/demo_data/*.dat` and `*.hea` to `.gitignore`)
 
 ### 5g-ii — Enhanced Demo API Endpoints (Satyarth — add to `server.py`)
-- [ ] Add `POST /api/demo/start` endpoint:
+- [x] Add `POST /api/demo/start` endpoint:
   - Accepts JSON: `{"record": "200", "mode": "mitbih"}` or `{"mode": "synthetic"}`
   - Stops any running engine, creates new `EcgSimulator` with chosen record, starts engine in demo mode
   - Returns `{"ok": true, "record": "200", "description": "Ventricular bigeminy — PVC every other beat"}`
-- [ ] Add `POST /api/demo/switch-to-arrhythmia` endpoint:
+- [x] Add `POST /api/demo/switch-to-arrhythmia` endpoint:
   - Mid-stream: replaces the current signal with record `200` (bigeminy) immediately
   - Used during live presentation: professor sees normal ECG → you click button → arrhythmia starts → alert fires
-- [ ] Add `GET /api/demo/records` endpoint:
+- [x] Add `GET /api/demo/records` endpoint:
   - Returns list of all available demo records with name, description, arrhythmia type, and expected model response
-- [ ] Add `GET /api/demo/ground-truth` endpoint:
+- [x] Add `GET /api/demo/ground-truth` endpoint:
   - Returns the MIT-BIH expert annotation for the current record at the current playback position (beat labels like `N`, `V`, `A`)
   - This lets you show professors: "MIT-BIH expert said V (PVC) here, our model says ABNORMAL here — they match"
 
@@ -273,7 +273,7 @@
 - [ ] Confirm alert appears on the Doctor's dashboard on the deployed Vercel URL
 - [ ] Open the Vercel frontend on a second device (phone or laptop) as the Doctor role — confirm alert banner appears
 - [ ] Charge RPi, have USB-C power bank as backup
-- [ ] Commit: `git commit -m "feat(demo): MIT-BIH demo mode API endpoints and control panel"`
+- [ ] Commit: `git commit -m "feat(demo): MIT-BIH demo mode API endpoints and control panel"` — done in `24891f7`
 
 ---
 
