@@ -280,14 +280,16 @@
 ## 🚀 Phase 6 — Deployment & Integration Testing (Rupam + All)
 
 ### 6a — Deploy Cloud API to Render
-- [ ] Push `backend/cloud_api.py` + `backend/cloud_requirements.txt` + `backend/Procfile` to its own GitHub repo
-- [ ] Connect to [Render](https://render.com/) → New Web Service
-- [ ] Set start command: `python cloud_api.py`
-- [ ] Set all env variables: `MONGO_URI`, `JWT_SECRET`, `FLASK_SECRET_KEY`, `EDGE_KEY`
+- [x] Push `backend/cloud_api.py` + `backend/cloud_requirements.txt` + `backend/Procfile` to its own GitHub repo (`satyarth8/ecg-backend`)
+- [x] Connect to [Render](https://render.com/) → New Web Service → live at `https://ecg-backend-2n9c.onrender.com`
+- [x] Set start command: `gunicorn cloud_api:app --bind 0.0.0.0:$PORT`
+- [x] Set all env variables: `MONGO_URI`, `JWT_SECRET`, `FLASK_SECRET_KEY`, `EDGE_KEY`
+- [x] Admin user seeded in MongoDB (`admin@ecg.local` / `Admin@1234`)
+- [x] Login endpoint verified: `POST /api/auth/login` returns JWT ✅
 - [ ] Set up free cron job at [cron-job.org](https://cron-job.org) to ping `/api/status` every 10 min (keep Render awake)
 
 ### 6b — Configure RPi for Production
-- [ ] Update RPi `.env`: set `CLOUD_API_URL=https://<render-url>`, `EDGE_KEY=<shared secret>`
+- [x] Update RPi `.env`: set `CLOUD_API_URL=https://ecg-backend-2n9c.onrender.com`, `EDGE_KEY=<shared secret>`
 - [ ] Restart systemd service: `sudo systemctl restart ecg_edge`
 
 ### 6c — End-to-End Test Checklist
