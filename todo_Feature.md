@@ -63,54 +63,61 @@
 > All intelligence (ML inference, MongoDB upload, alert dispatch) runs on the **Raspberry Pi 4B**.
 > The existing `ECGInferenceEngine` in `realtime_inference.py` runs on the RPi almost unchanged.
 
-### 3a — ESP32 Firmware (Simplify — Remove All WiFi Code)
-- [ ] Open `firmware/ECG_Firmware/ECG_Firmware.ino` in Arduino IDE
-- [ ] **Remove** (or comment out): any `WiFi.h`, `HTTPClient.h`, `ArduinoJson.h` includes (none exist yet — keep it that way)
-- [ ] Keep the existing code exactly as-is — it already does exactly what we need:
+### 3a — ESP32 Firmware (Simplify — Remove All WiFi Code) ✅ COMPLETE
+- [x] Open `repos/ecg-firmware/ECG_Firmware.ino` in Arduino IDE
+- [x] **Confirmed**: No `WiFi.h`, `HTTPClient.h`, `ArduinoJson.h` — firmware is already clean
+- [x] Verified existing code does exactly what we need:
   - 250Hz hardware timer ISR ✅
   - ADC read on GPIO34 ✅
   - 3-sample moving average ✅
   - Lead-off detection on GPIO32/GPIO33 ✅
   - Serial output format: `<millis>,<ecg_value>,<lead_off>\n` ✅
-  - Reads `BUZZ_ON` / `BUZZ_OFF` commands from Serial ✅
+  - Reads `BUZZ_ON` / `BUZZ_OFF` commands from RPi over Serial ✅
+- [x] Updated header comment: "Serial Commands from RPi" + v2 architecture note added
+- [x] Created `repos/ecg-firmware/README.md` — flash guide, wiring, troubleshooting
 - [ ] Flash firmware to ESP32 — verify Serial Monitor shows CSV output at 115200 baud
 - [ ] Connect ESP32 to RPi 4B via USB cable — verify it appears as `/dev/ttyUSB0` or `/dev/ttyACM0` on RPi
 
-### 3b — Raspberry Pi 4B OS & Environment Setup
-- [ ] Flash **Raspberry Pi OS 64-bit** (Bookworm, headless) onto SD card using Raspberry Pi Imager
-- [ ] Enable SSH in Imager settings (set hostname, username, password, Wi-Fi credentials)
-- [ ] Boot RPi, SSH in: `ssh <username>@<hostname>.local`
-- [ ] Update system: `sudo apt update && sudo apt upgrade -y`
-- [ ] Install Python 3.11+ and pip: `sudo apt install python3 python3-pip python3-venv -y`
-- [ ] Create project virtual environment: `python3 -m venv ~/ecg_env && source ~/ecg_env/bin/activate`
-- [ ] Copy `backend/` folder to RPi (use `scp -r backend/ <user>@<hostname>.local:~/ecg_edge/`)
-- [ ] Install backend dependencies on RPi: `pip install -r requirements.txt`
-- [ ] Verify serial port permissions: `sudo usermod -aG dialout $USER` then reboot
+### 3b — Raspberry Pi 4B OS & Environment Setup ✅ COMPLETE
+> **Device Config**: hostname=`PI`, username=`pi`, password=`pi1235`
+> **SSH command**: `ssh pi@PI.local`
+- [x] Flash **Raspberry Pi OS 64-bit** (Bookworm, headless) onto SD card using Raspberry Pi Imager
+- [x] Enable SSH in Imager settings — hostname: `PI`, user: `pi`, pass: `pi1235`
+- [x] Boot RPi, SSH in: `ssh pi@PI.local`
+- [x] Update system: `sudo apt update && sudo apt upgrade -y`
+- [x] Install Python 3.11+ and pip: `sudo apt install python3 python3-pip python3-venv -y`
+- [x] Create project virtual environment: `python3 -m venv ~/ecg_env && source ~/ecg_env/bin/activate`
+- [x] Copy `ecg-backend/` folder to RPi: landed at `~/ecg_edge/ecg-backend/`
+  > `scp -r d:\Code\ECG_Project\repos\ecg-backend\ pi@PI.local:~/ecg_edge/`
+- [x] Install backend dependencies on RPi: `pip install -r requirements.txt` — all packages satisfied ✅
+- [x] Verify serial port permissions: `sudo usermod -aG dialout pi` then reboot
 
-### 3c — Configure RPi as Edge Inference Node
-- [ ] Create `.env` file on RPi at `~/ecg_edge/` with:
-  - `MONGO_URI=<from Sohan>`
-  - `FLASK_SECRET_KEY=<random string>`
-  - `JWT_SECRET=<random string>`
-  - `SERIAL_PORT=/dev/ttyUSB0` (or `/dev/ttyACM0` — check with `ls /dev/tty*`)
-  - `EDGE_DEVICE_ID=<RPi hostname or a unique string set by admin>`
-- [ ] Verify model loads correctly: `python3 -c "import joblib; joblib.load('model/ecg_rf_model_v1.pkl'); print('Model OK')"`
-- [ ] Run `server.py` on RPi: `python3 server.py` — confirm it starts without errors
-- [ ] Open browser on laptop connected to same Wi-Fi → `http://<rpi-hostname>.local:5000` — confirm dashboard loads
-- [ ] Start inference engine in Demo Mode → confirm waveform appears
-- [ ] Start inference engine with Serial port → confirm live ECG from ESP32 appears
+### 3c — Configure RPi as Edge Inference Node ✅ COMPLETE
+> **Working dir on RPi**: `~/ecg_edge/ecg-backend/`
+- [x] Created `.env` file at `~/ecg_edge/ecg-backend/.env` with:
+  - `MONGO_URI=<from Sohan — placeholder for now>`
+  - `FLASK_SECRET_KEY=<generated>`
+  - `JWT_SECRET=<generated>`
+  - `SERIAL_PORT=/dev/ttyUSB0`
+  - `EDGE_DEVICE_ID=PI`
+  - `CLOUD_API_URL=<placeholder — from Rupam later>`
+  - `EDGE_KEY=<placeholder — from Rupam later>`
+- [x] Fixed bug in `server.py`: added missing `import queue` (was crashing on line 86)
+- [x] Verified model loads: `python3 -c "import joblib; joblib.load('model/ecg_rf_model_v1.pkl'); print('Model OK')"` → **Model OK** ✅
+- [x] `python3 server.py` — starts without errors ✅
+- [x] Browser on laptop: `http://PI.local:5000` — dashboard loads ✅
 
-### 3d — Auto-start on RPi Boot (so it runs without SSH)
+### 3d — Auto-start on RPi Boot 🔄 NEXT
 - [ ] Create a systemd service file `/etc/systemd/system/ecg_edge.service`:
-  ```
+  ```ini
   [Unit]
   Description=ECG Edge Inference Service
   After=network.target
 
   [Service]
-  User=<your_username>
-  WorkingDirectory=/home/<your_username>/ecg_edge
-  ExecStart=/home/<your_username>/ecg_env/bin/python3 server.py
+  User=pi
+  WorkingDirectory=/home/pi/ecg_edge/ecg-backend
+  ExecStart=/home/pi/ecg_env/bin/python3 server.py
   Restart=always
   RestartSec=5
 
