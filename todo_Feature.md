@@ -181,37 +181,37 @@
 ## 🎨 Phase 5 — React Frontend (Deepika + Rupam)
 
 ### 5a — Foundation & Routing (Rupam)
-- [ ] Install dependencies: `npm install react-router-dom axios socket.io-client recharts`
-- [ ] Set up `react-router-dom` with routes: `/login`, `/admin`, `/doctor`, `/patient`
-- [ ] Create `AuthContext` (stores JWT token, user role, expiry) using React Context API
-- [ ] Create `ProtectedRoute` component — redirects to `/login` if not authenticated
-- [ ] Create `src/api/` folder with Axios instance (base URL = `VITE_API_BASE_URL`, auto-attaches JWT)
+- [x] Install dependencies: `npm install react-router-dom axios socket.io-client recharts`
+- [x] Set up `react-router-dom` with routes: `/login`, `/admin`, `/doctor`, `/patient`
+- [x] Create `AuthContext` (stores JWT token, user role, expiry) using React Context API
+- [x] Create `ProtectedRoute` component — redirects to `/login` if not authenticated
+- [x] Create `src/api/` folder with Axios instance (base URL = `VITE_API_BASE_URL`, auto-attaches JWT)
 
 ### 5b — Login Page (Deepika)
-- [ ] Build `LoginPage.jsx` — email + password form, POST to `/api/auth/login`, store JWT in context
-- [ ] Show role-appropriate redirect after login (admin → `/admin`, doctor → `/doctor`, patient → `/patient`)
+- [x] Build `LoginPage.jsx` — email + password form, POST to `/api/auth/login`, store JWT in context
+- [x] Show role-appropriate redirect after login (admin → `/admin`, doctor → `/doctor`, patient → `/patient`)
 
 ### 5c — Admin Dashboard (Rupam)
-- [ ] Build `AdminPage.jsx` with three panels:
-  - [ ] **Users panel**: list users, create new user with role selector (admin/doctor/nurse/patient)
-  - [ ] **Device panel**: form to register RPi `device_id` and map to room number
-  - [ ] **Patient panel**: assign patient to room, assign doctor/nurse to patient
+- [x] Build `AdminPage.jsx` with three panels:
+  - [x] **Users panel**: list users, create new user with role selector (admin/doctor/nurse/patient)
+  - [x] **Device panel**: form to register RPi `device_id` and map to room number
+  - [x] **Patient panel**: assign patient to room, assign doctor/nurse to patient
 
 ### 5d — Doctor / Nurse Dashboard (Deepika)
-- [ ] Build `DoctorPage.jsx`:
-  - [ ] Left sidebar: list assigned patients, fetched from `/api/doctor/patients`
-  - [ ] On patient select: fetch recent ECG history from `/api/patients/<id>/ecg-history`
-  - [ ] Display BPM trend chart for last 24 hours using Recharts `LineChart`
-  - [ ] Display last prediction badge (Normal / ABNORMAL) + SQI indicator
-  - [ ] **Alert panel**: polls `/api/alerts?patient_id=<id>` every 30 seconds
-  - [ ] Alert banner: plays browser audio ping + red banner when unacknowledged ABNORMAL alert exists
-  - [ ] Acknowledge button: calls `POST /api/alerts/<id>/acknowledge`
+- [x] Build `DoctorPage.jsx`:
+  - [x] Left sidebar: list assigned patients, fetched from `/api/doctor/patients`
+  - [x] On patient select: fetch recent ECG history from `/api/patients/<id>/ecg-history`
+  - [x] Display BPM trend chart for last 24 hours using Recharts `LineChart`
+  - [x] Display last prediction badge (Normal / ABNORMAL) + SQI indicator
+  - [x] **Alert panel**: polls `/api/alerts?patient_id=<id>` every 30 seconds
+  - [x] Alert banner: plays browser audio ping + red banner when unacknowledged ABNORMAL alert exists
+  - [x] Acknowledge button: calls `POST /api/alerts/<id>/acknowledge`
 
 ### 5e — Patient Dashboard (Deepika)
-- [ ] Build `PatientPage.jsx`:
-  - [ ] Fetch personal info and ECG history from `/api/patients/me`
-  - [ ] Display BPM trend for last 24 hours using Recharts
-  - [ ] Display last ML prediction and timestamp
+- [x] Build `PatientPage.jsx`:
+  - [x] Fetch personal info and ECG history from `/api/patients/me`
+  - [x] Display BPM trend for last 24 hours using Recharts
+  - [x] Display last ML prediction and timestamp
 
 ### 5f — Deploy Frontend (Rupam)
 - [ ] Push `frontend/react_app/` to its own GitHub repo
