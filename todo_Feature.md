@@ -114,13 +114,13 @@
   > `wfdb` is auto-downloading MIT-BIH demo records from physionet.org (Phase 5g-i pre-done!) ✅
 - [x] Reboot RPi and confirm service auto-starts without SSH ✅
 
-### 3e — Buzzer on RPi (Replace ESP32 Serial Command)
+### 3e — Buzzer on RPi (Replace ESP32 Serial Command) ✅ COMPLETE
 > The buzzer is currently controlled by the RPi sending `BUZZ_ON` over Serial to the ESP32.
 > This still works in Option B — the ESP32 reads `BUZZ_ON` from Serial and fires the buzzer.
 > No change needed — the `_send_serial_command("BUZZ_ON")` path in `realtime_inference.py` already handles this.
-- [ ] Verify buzzer fires correctly when `BUZZ_ON` is sent from RPi to ESP32 via Serial
-- [ ] Commit firmware: `git commit -m "feat(firmware): verified dumb ADC bridge mode, no WiFi needed"`
-- [ ] Commit RPi setup docs: `git commit -m "feat(edge): RPi 4B edge node setup and systemd service"`
+- [x] Verify buzzer fires correctly when `BUZZ_ON` is sent from RPi to ESP32 via Serial
+- [x] Commit firmware: `git commit -m "feat(firmware): verified dumb ADC bridge mode, no WiFi needed"`
+- [x] Commit RPi setup docs: `git commit -m "feat(edge): RPi 4B edge node setup and systemd service"`
 
 ---
 
