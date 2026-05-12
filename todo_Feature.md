@@ -36,23 +36,25 @@
 
 ---
 
-## 🗄️ Phase 2 — Database Setup (Sohan)
+## 🗄️ Phase 2 — Database Setup (Sohan) ✅ COMPLETED
 > **Sign up**: [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register)
 >
 > **Note (v2 Architecture)**: Raw ECG waveform data is NO LONGER sent to the cloud. Only 5-second ML summaries and alerts are stored. This massively reduces DB load.
 
-- [ ] Create MongoDB Atlas account (free M0 tier)
-- [ ] Create cluster, create database user (`ecg_admin`), allow `0.0.0.0/0` network access
-- [ ] Copy the `MONGO_URI` connection string → share with Satyarth securely (NOT via git — use WhatsApp/DM)
-- [ ] Create `users` collection — schema: `{username, email, password_hash, role, created_at}`
-- [ ] Create `patients` collection — schema: `{user_id, name, dob, assigned_room, assigned_doctors[], assigned_nurses[]}`
-- [ ] Create `devices` collection — schema: `{device_id (RPi hostname or MAC), room_number, status}`
-- [ ] Create `ecg_summaries` collection — Bucket Pattern, one doc per 5-second inference window:
+- [x] Create MongoDB Atlas account (free M0 tier)
+- [x] Create cluster, create database user (`ecg_admin`), allow `0.0.0.0/0` network access
+- [x] Copy the `MONGO_URI` connection string → share with Satyarth securely (NOT via git — use WhatsApp/DM)
+- [x] Create `users` collection — schema: `{username, email, password_hash, role, created_at}` — JSON Schema validator + email unique index
+- [x] Create `patients` collection — schema: `{user_id, name, dob, assigned_room, assigned_doctors[], assigned_nurses[]}`
+- [x] Create `devices` collection — schema: `{device_id (RPi hostname or MAC), room_number, status}` — device_id unique index
+- [x] Create `ecg_summaries` collection — Bucket Pattern, one doc per 5-second inference window:
   - Fields: `patient_id, start_time, end_time, heart_rate, rr_mean, rr_std, sdnn, rmssd, beat_variance, sqi, prediction, probability, consecutive_count`
-- [ ] Create `alerts` collection — schema: `{patient_id, device_id, severity, timestamp, consecutive_count, probability, acknowledged, acknowledged_by}`
+  - Indexes: `patient_time_desc`, `device_time_desc`
+- [x] Create `alerts` collection — schema: `{patient_id, device_id, severity, timestamp, consecutive_count, probability, acknowledged, acknowledged_by}`
+  - Indexes: `patient_unacked_alerts`, `patient_alert_recent` (for 5-min debounce)
   - **No raw ECG collection needed** — raw data stays on RPi local storage only
-- [ ] Verify connection from a local Python script using `MONGO_URI` before handing off
-- [ ] Commit: `git commit -m "docs: MongoDB schemas finalised for v2 RPi architecture"`
+- [x] Verify connection from a local Python script using `MONGO_URI` before handing off — `verify_connection.py` passed all checks
+- [x] Commit: `feat(db): Phase 2 - MongoDB Atlas schemas, indexes, database.py singleton` ✓ pushed to ecg-backend
 
 ---
 
@@ -135,11 +137,11 @@
 > - **Cloud (`cloud_api.py` on Render)**: Thin REST API — stores data from RPi, serves React frontend.
 
 ### 4a — Environment & Config (Both Nodes)
-- [ ] Add `from dotenv import load_dotenv` + `load_dotenv()` to `server.py` at startup
-- [ ] Replace hardcoded `SECRET_KEY = "ecg_secret_2026"` → `os.getenv("FLASK_SECRET_KEY")`
-- [ ] Create `backend/database.py` — MongoClient singleton with collection accessors
-- [ ] Add `EDGE_DEVICE_ID` env var — unique identifier for this RPi unit (maps to a room)
-- [ ] Add `PyJWT` to `backend/requirements.txt`
+- [x] Add `from dotenv import load_dotenv` + `load_dotenv()` to `server.py` at startup
+- [x] Replace hardcoded `SECRET_KEY = "ecg_secret_2026"` → `os.getenv("FLASK_SECRET_KEY")`
+- [x] Create `backend/database.py` — MongoClient singleton with collection accessors
+- [x] Add `EDGE_DEVICE_ID` env var — unique identifier for this RPi unit (maps to a room)
+- [x] Add `PyJWT` to `backend/requirements.txt`
 
 ### 4b — RPi Edge Server (`server.py` — runs on RPi locally)
 - [ ] On startup: look up `EDGE_DEVICE_ID` in MongoDB `devices` collection → resolve `patient_id`
