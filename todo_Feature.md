@@ -107,26 +107,12 @@
 - [x] `python3 server.py` — starts without errors ✅
 - [x] Browser on laptop: `http://PI.local:5000` — dashboard loads ✅
 
-### 3d — Auto-start on RPi Boot 🔄 NEXT
-- [ ] Create a systemd service file `/etc/systemd/system/ecg_edge.service`:
-  ```ini
-  [Unit]
-  Description=ECG Edge Inference Service
-  After=network.target
-
-  [Service]
-  User=pi
-  WorkingDirectory=/home/pi/ecg_edge/ecg-backend
-  ExecStart=/home/pi/ecg_env/bin/python3 server.py
-  Restart=always
-  RestartSec=5
-
-  [Install]
-  WantedBy=multi-user.target
-  ```
-- [ ] Enable and start: `sudo systemctl enable ecg_edge && sudo systemctl start ecg_edge`
-- [ ] Verify service is running: `sudo systemctl status ecg_edge`
-- [ ] Reboot RPi and confirm service auto-starts and ECG stream resumes
+### 3d — Auto-start on RPi Boot ✅ COMPLETE
+- [x] Created `/etc/systemd/system/ecg_edge.service` with User=pi, correct WorkingDirectory and ExecStart paths
+- [x] `sudo systemctl daemon-reload && sudo systemctl enable ecg_edge && sudo systemctl start ecg_edge`
+- [x] Status verified: `active (running)` — PID 4198, CPU 4.775s, 19 tasks ✅
+  > `wfdb` is auto-downloading MIT-BIH demo records from physionet.org (Phase 5g-i pre-done!) ✅
+- [x] Reboot RPi and confirm service auto-starts without SSH ✅
 
 ### 3e — Buzzer on RPi (Replace ESP32 Serial Command)
 > The buzzer is currently controlled by the RPi sending `BUZZ_ON` over Serial to the ESP32.
