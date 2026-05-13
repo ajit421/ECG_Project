@@ -213,13 +213,13 @@
   - [x] Display BPM trend for last 24 hours using Recharts
   - [x] Display last ML prediction and timestamp
 
-### 5f — Deploy Frontend (Rupam)
-- [ ] Push `frontend/react_app/` to its own GitHub repo
-- [ ] Connect to [Vercel](https://vercel.com/) → New Project → set root to `/`
-- [ ] Set env variable in Vercel: `VITE_API_BASE_URL=https://<render-cloud-api-url>`
-- [ ] Verify login, admin panel, doctor dashboard work on deployed Vercel URL
-- [ ] Commit: `git commit -m "feat(frontend): full React UI with RBAC, alert polling, ECG history"`
-
+### 5f — Deploy Frontend (Rupam) ✅ COMPLETE (Ajit)
+- [x] Push `frontend/react_app/` to its own GitHub repo
+- [x] Connect to [Vercel](https://vercel.com/) → New Project → set root to `/`
+- [x] Set env variable in Vercel: `VITE_API_BASE_URL=https://<render-cloud-api-url>`
+- [x] Verify login, admin panel, doctor dashboard work on deployed Vercel URL
+      > **Deployed URL**: https://ecg-frontend-virid.vercel.app — running ✅ (completed by Ajit)
+- [x] Commit: `git commit -m "feat(frontend): full React UI with RBAC, alert polling, ECG history"`
 ---
 
 ## 🎬 Phase 5g — Demo Mode for Presentation (Satyarth + Deepika)
@@ -286,7 +286,7 @@
 - [x] Set all env variables: `MONGO_URI`, `JWT_SECRET`, `FLASK_SECRET_KEY`, `EDGE_KEY`
 - [x] Admin user seeded in MongoDB (`admin@ecg.local` / `Admin@1234`)
 - [x] Login endpoint verified: `POST /api/auth/login` returns JWT ✅
-- [ ] Set up free cron job at [cron-job.org](https://cron-job.org) to ping `/api/status` every 10 min (keep Render awake)
+- [x] Set up UptimeRobot monitor to ping `/api/status` every 5 min (keep Render awake) — `https://ecg-backend-2n9c.onrender.com/api/status`
 
 ### 6b — Configure RPi for Production
 - [x] Update RPi `.env`: set `CLOUD_API_URL=https://ecg-backend-2n9c.onrender.com`, `EDGE_KEY=<shared secret>`
