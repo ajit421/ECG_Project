@@ -75,8 +75,8 @@
   - Reads `BUZZ_ON` / `BUZZ_OFF` commands from RPi over Serial ✅
 - [x] Updated header comment: "Serial Commands from RPi" + v2 architecture note added
 - [x] Created `repos/ecg-firmware/README.md` — flash guide, wiring, troubleshooting
-- [ ] Flash firmware to ESP32 — verify Serial Monitor shows CSV output at 115200 baud
-- [ ] Connect ESP32 to RPi 4B via USB cable — verify it appears as `/dev/ttyUSB0` or `/dev/ttyACM0` on RPi
+- [x] Flash firmware to ESP32 — verify Serial Monitor shows CSV output at 115200 baud
+- [x] Connect ESP32 to RPi 4B via USB cable — verify it appears as `/dev/ttyUSB0` or `/dev/ttyACM0` on RPi
 
 ### 3b — Raspberry Pi 4B OS & Environment Setup ✅ COMPLETE
 > **Device Config**: hostname=`PI`, username=`pi`, password=`pi1235`
@@ -143,7 +143,7 @@
 - [x] On ABNORMAL alert (3 consecutive windows): insert into `alerts` collection with debounce (no duplicate if one exists in last 5 minutes)
 - [x] Keep existing Socket.IO `push_data_loop` — this serves the real-time waveform to any local browser on same network
 - [x] Add `patient_id` context to all Socket.IO `update` events (so cloud-connected browsers know which patient)
-- [ ] Test locally: run `server.py` on RPi, open browser on laptop on same WiFi → confirm live ECG and predictions
+- [x] Test locally: run `server.py` on RPi, open browser on laptop on same WiFi → confirm live ECG and predictions
 
 ### 4c — Cloud API (`cloud_api.py` — NEW file, runs on Render)
 > This is a **new, separate, lightweight Flask app** — NOT the same as `server.py`.
@@ -253,15 +253,15 @@
   - Returns the MIT-BIH expert annotation for the current record at the current playback position (beat labels like `N`, `V`, `A`)
   - This lets you show professors: "MIT-BIH expert said V (PVC) here, our model says ABNORMAL here — they match"
 
-### 5g-iii — Demo Control Panel in React (Deepika — add to Admin/Doctor UI)
-- [ ] Build `DemoControlPanel.jsx` component (visible only to admin role):
-  - [ ] **Patient Selector**: dropdown showing 4 demo records with description (`Normal`, `PVCs`, `Bigeminy`, `AFib+PVCs`)
-  - [ ] **"Start Demo Patient"** button → calls `POST /api/demo/start` with selected record
-  - [ ] **"Switch to Arrhythmia NOW"** red button → calls `POST /api/demo/switch-to-arrhythmia` (for live demo climax)
-  - [ ] **Model Accuracy Badge**: shows live `{test_accuracy: 81.6%, f1_score: 76.8%}` from `model_metadata.json`
-  - [ ] **Ground Truth indicator**: small label showing current MIT-BIH expert beat annotation for comparison
-- [ ] Add `DemoControlPanel` to the Admin page as a collapsible "Demo Controls" section
-- [ ] Style it differently (e.g., amber/orange background) so it's clearly labeled as demo-only
+### 5g-iii — Demo Control Panel in React (Deepika — add to Admin/Doctor UI) ✅ COMPLETE
+- [x] Build `DemoControlPanel.jsx` component (visible only to admin role):
+  - [x] **Patient Selector**: dropdown showing 4 demo records with description (`Normal`, `PVCs`, `Bigeminy`, `AFib+PVCs`)
+  - [x] **"Start Demo Patient"** button → calls `POST /api/demo/start` with selected record
+  - [x] **"Switch to Arrhythmia NOW"** red button → calls `POST /api/demo/switch-to-arrhythmia` (for live demo climax)
+  - [x] **Model Accuracy Badge**: shows live `{test_accuracy: 81.6%, f1_score: 76.8%}` from `model_metadata.json`
+  - [x] **Ground Truth indicator**: small label showing current MIT-BIH expert beat annotation for comparison
+- [x] Add `DemoControlPanel` to the Admin page as a collapsible "Demo Controls" section (🎬 Demo tab in sidebar)
+- [x] Style it differently (amber/orange background) so it's clearly labeled as demo-only
 
 ### 5g-iv — Pre-Presentation Rehearsal Checklist (All — run the day before)
 - [ ] Verify RPi is connected to presentation room's Wi-Fi (or use mobile hotspot as backup)
@@ -290,7 +290,7 @@
 
 ### 6b — Configure RPi for Production
 - [x] Update RPi `.env`: set `CLOUD_API_URL=https://ecg-backend-2n9c.onrender.com`, `EDGE_KEY=<shared secret>`
-- [ ] Restart systemd service: `sudo systemctl restart ecg_edge`
+- [x] Restart systemd service: `sudo systemctl restart ecg_edge`
 
 ### 6c — End-to-End Test Checklist
 - [ ] ESP32 (USB) → RPi serial → ECG waveform appears in `server.py` logs ✅
