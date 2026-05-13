@@ -293,7 +293,7 @@
 - [x] Restart systemd service: `sudo systemctl restart ecg_edge`
 
 ### 6c — End-to-End Test Checklist
-- [ ] ESP32 (USB) → RPi serial → ECG waveform appears in `server.py` logs ✅
+- [x] ESP32 (USB) → RPi serial → ECG waveform appears in `server.py` logs ✅
 - [ ] RPi ML inference → prediction logged + summary POSTed to Render `/api/ingest/summary` ✅
 - [ ] Summary appears in MongoDB Atlas `ecg_summaries` collection ✅
 - [ ] Doctor on Vercel → logs in → sees patient in sidebar → ECG history chart shows real data ✅
