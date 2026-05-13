@@ -171,10 +171,17 @@
 - [x] If all retries fail: cache summary locally to a queue file, flush when connection restored
 
 ### 4e — Cloud Deployment Prep
+<<<<<<< HEAD
+- [x] Create `backend/Procfile`: `web: gunicorn cloud_api:app`
+- [x] Create `backend/cloud_requirements.txt` — only what `cloud_api.py` needs
+- [x] Test `cloud_api.py` locally with `python cloud_api.py`
+- [x] Commit: `git commit -m "feat(backend): split into RPi edge server and Render cloud API"`
+=======
 - [x] Create `backend/Procfile`: `web: gunicorn cloud_api:app --bind 0.0.0.0:$PORT`
 - [x] Create `backend/cloud_requirements.txt` — only what `cloud_api.py` needs (flask, pymongo, PyJWT, python-dotenv, bcrypt, gunicorn — no scipy, no joblib, no pyserial)
 - [x] Test `cloud_api.py` locally with `python cloud_api.py` — syntax verified ✅
 - [x] Commit: `git commit -m "feat(backend): split into RPi edge server and Render cloud API"` — done in `75639f6`
+>>>>>>> d29cc0af3ce9111f0e562d8e8ee8d142f591bfc3
 
 ---
 
