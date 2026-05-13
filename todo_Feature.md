@@ -63,71 +63,64 @@
 > All intelligence (ML inference, MongoDB upload, alert dispatch) runs on the **Raspberry Pi 4B**.
 > The existing `ECGInferenceEngine` in `realtime_inference.py` runs on the RPi almost unchanged.
 
-### 3a — ESP32 Firmware (Simplify — Remove All WiFi Code)
-- [ ] Open `firmware/ECG_Firmware/ECG_Firmware.ino` in Arduino IDE
-- [ ] **Remove** (or comment out): any `WiFi.h`, `HTTPClient.h`, `ArduinoJson.h` includes (none exist yet — keep it that way)
-- [ ] Keep the existing code exactly as-is — it already does exactly what we need:
+### 3a — ESP32 Firmware (Simplify — Remove All WiFi Code) ✅ COMPLETE
+- [x] Open `repos/ecg-firmware/ECG_Firmware.ino` in Arduino IDE
+- [x] **Confirmed**: No `WiFi.h`, `HTTPClient.h`, `ArduinoJson.h` — firmware is already clean
+- [x] Verified existing code does exactly what we need:
   - 250Hz hardware timer ISR ✅
   - ADC read on GPIO34 ✅
   - 3-sample moving average ✅
   - Lead-off detection on GPIO32/GPIO33 ✅
   - Serial output format: `<millis>,<ecg_value>,<lead_off>\n` ✅
-  - Reads `BUZZ_ON` / `BUZZ_OFF` commands from Serial ✅
+  - Reads `BUZZ_ON` / `BUZZ_OFF` commands from RPi over Serial ✅
+- [x] Updated header comment: "Serial Commands from RPi" + v2 architecture note added
+- [x] Created `repos/ecg-firmware/README.md` — flash guide, wiring, troubleshooting
 - [ ] Flash firmware to ESP32 — verify Serial Monitor shows CSV output at 115200 baud
 - [ ] Connect ESP32 to RPi 4B via USB cable — verify it appears as `/dev/ttyUSB0` or `/dev/ttyACM0` on RPi
 
-### 3b — Raspberry Pi 4B OS & Environment Setup
-- [ ] Flash **Raspberry Pi OS 64-bit** (Bookworm, headless) onto SD card using Raspberry Pi Imager
-- [ ] Enable SSH in Imager settings (set hostname, username, password, Wi-Fi credentials)
-- [ ] Boot RPi, SSH in: `ssh <username>@<hostname>.local`
-- [ ] Update system: `sudo apt update && sudo apt upgrade -y`
-- [ ] Install Python 3.11+ and pip: `sudo apt install python3 python3-pip python3-venv -y`
-- [ ] Create project virtual environment: `python3 -m venv ~/ecg_env && source ~/ecg_env/bin/activate`
-- [ ] Copy `backend/` folder to RPi (use `scp -r backend/ <user>@<hostname>.local:~/ecg_edge/`)
-- [ ] Install backend dependencies on RPi: `pip install -r requirements.txt`
-- [ ] Verify serial port permissions: `sudo usermod -aG dialout $USER` then reboot
+### 3b — Raspberry Pi 4B OS & Environment Setup ✅ COMPLETE
+> **Device Config**: hostname=`PI`, username=`pi`, password=`pi1235`
+> **SSH command**: `ssh pi@PI.local`
+- [x] Flash **Raspberry Pi OS 64-bit** (Bookworm, headless) onto SD card using Raspberry Pi Imager
+- [x] Enable SSH in Imager settings — hostname: `PI`, user: `pi`, pass: `pi1235`
+- [x] Boot RPi, SSH in: `ssh pi@PI.local`
+- [x] Update system: `sudo apt update && sudo apt upgrade -y`
+- [x] Install Python 3.11+ and pip: `sudo apt install python3 python3-pip python3-venv -y`
+- [x] Create project virtual environment: `python3 -m venv ~/ecg_env && source ~/ecg_env/bin/activate`
+- [x] Copy `ecg-backend/` folder to RPi: landed at `~/ecg_edge/ecg-backend/`
+  > `scp -r d:\Code\ECG_Project\repos\ecg-backend\ pi@PI.local:~/ecg_edge/`
+- [x] Install backend dependencies on RPi: `pip install -r requirements.txt` — all packages satisfied ✅
+- [x] Verify serial port permissions: `sudo usermod -aG dialout pi` then reboot
 
-### 3c — Configure RPi as Edge Inference Node
-- [ ] Create `.env` file on RPi at `~/ecg_edge/` with:
-  - `MONGO_URI=<from Sohan>`
-  - `FLASK_SECRET_KEY=<random string>`
-  - `JWT_SECRET=<random string>`
-  - `SERIAL_PORT=/dev/ttyUSB0` (or `/dev/ttyACM0` — check with `ls /dev/tty*`)
-  - `EDGE_DEVICE_ID=<RPi hostname or a unique string set by admin>`
-- [ ] Verify model loads correctly: `python3 -c "import joblib; joblib.load('model/ecg_rf_model_v1.pkl'); print('Model OK')"`
-- [ ] Run `server.py` on RPi: `python3 server.py` — confirm it starts without errors
-- [ ] Open browser on laptop connected to same Wi-Fi → `http://<rpi-hostname>.local:5000` — confirm dashboard loads
-- [ ] Start inference engine in Demo Mode → confirm waveform appears
-- [ ] Start inference engine with Serial port → confirm live ECG from ESP32 appears
+### 3c — Configure RPi as Edge Inference Node ✅ COMPLETE
+> **Working dir on RPi**: `~/ecg_edge/ecg-backend/`
+- [x] Created `.env` file at `~/ecg_edge/ecg-backend/.env` with:
+  - `MONGO_URI=<from Sohan — placeholder for now>`
+  - `FLASK_SECRET_KEY=<generated>`
+  - `JWT_SECRET=<generated>`
+  - `SERIAL_PORT=/dev/ttyUSB0`
+  - `EDGE_DEVICE_ID=PI`
+  - `CLOUD_API_URL=<placeholder — from Rupam later>`
+  - `EDGE_KEY=<placeholder — from Rupam later>`
+- [x] Fixed bug in `server.py`: added missing `import queue` (was crashing on line 86)
+- [x] Verified model loads: `python3 -c "import joblib; joblib.load('model/ecg_rf_model_v1.pkl'); print('Model OK')"` → **Model OK** ✅
+- [x] `python3 server.py` — starts without errors ✅
+- [x] Browser on laptop: `http://PI.local:5000` — dashboard loads ✅
 
-### 3d — Auto-start on RPi Boot (so it runs without SSH)
-- [ ] Create a systemd service file `/etc/systemd/system/ecg_edge.service`:
-  ```
-  [Unit]
-  Description=ECG Edge Inference Service
-  After=network.target
+### 3d — Auto-start on RPi Boot ✅ COMPLETE
+- [x] Created `/etc/systemd/system/ecg_edge.service` with User=pi, correct WorkingDirectory and ExecStart paths
+- [x] `sudo systemctl daemon-reload && sudo systemctl enable ecg_edge && sudo systemctl start ecg_edge`
+- [x] Status verified: `active (running)` — PID 4198, CPU 4.775s, 19 tasks ✅
+  > `wfdb` is auto-downloading MIT-BIH demo records from physionet.org (Phase 5g-i pre-done!) ✅
+- [x] Reboot RPi and confirm service auto-starts without SSH ✅
 
-  [Service]
-  User=<your_username>
-  WorkingDirectory=/home/<your_username>/ecg_edge
-  ExecStart=/home/<your_username>/ecg_env/bin/python3 server.py
-  Restart=always
-  RestartSec=5
-
-  [Install]
-  WantedBy=multi-user.target
-  ```
-- [ ] Enable and start: `sudo systemctl enable ecg_edge && sudo systemctl start ecg_edge`
-- [ ] Verify service is running: `sudo systemctl status ecg_edge`
-- [ ] Reboot RPi and confirm service auto-starts and ECG stream resumes
-
-### 3e — Buzzer on RPi (Replace ESP32 Serial Command)
+### 3e — Buzzer on RPi (Replace ESP32 Serial Command) ✅ COMPLETE
 > The buzzer is currently controlled by the RPi sending `BUZZ_ON` over Serial to the ESP32.
 > This still works in Option B — the ESP32 reads `BUZZ_ON` from Serial and fires the buzzer.
 > No change needed — the `_send_serial_command("BUZZ_ON")` path in `realtime_inference.py` already handles this.
-- [ ] Verify buzzer fires correctly when `BUZZ_ON` is sent from RPi to ESP32 via Serial
-- [ ] Commit firmware: `git commit -m "feat(firmware): verified dumb ADC bridge mode, no WiFi needed"`
-- [ ] Commit RPi setup docs: `git commit -m "feat(edge): RPi 4B edge node setup and systemd service"`
+- [x] Verify buzzer fires correctly when `BUZZ_ON` is sent from RPi to ESP32 via Serial
+- [x] Commit firmware: `git commit -m "feat(firmware): verified dumb ADC bridge mode, no WiFi needed"`
+- [x] Commit RPi setup docs: `git commit -m "feat(edge): RPi 4B edge node setup and systemd service"`
 
 ---
 
@@ -178,47 +171,54 @@
 - [x] If all retries fail: cache summary locally to a queue file, flush when connection restored
 
 ### 4e — Cloud Deployment Prep
+<<<<<<< HEAD
 - [x] Create `backend/Procfile`: `web: gunicorn cloud_api:app`
 - [x] Create `backend/cloud_requirements.txt` — only what `cloud_api.py` needs
 - [x] Test `cloud_api.py` locally with `python cloud_api.py`
 - [x] Commit: `git commit -m "feat(backend): split into RPi edge server and Render cloud API"`
+=======
+- [x] Create `backend/Procfile`: `web: gunicorn cloud_api:app --bind 0.0.0.0:$PORT`
+- [x] Create `backend/cloud_requirements.txt` — only what `cloud_api.py` needs (flask, pymongo, PyJWT, python-dotenv, bcrypt, gunicorn — no scipy, no joblib, no pyserial)
+- [x] Test `cloud_api.py` locally with `python cloud_api.py` — syntax verified ✅
+- [x] Commit: `git commit -m "feat(backend): split into RPi edge server and Render cloud API"` — done in `75639f6`
+>>>>>>> d29cc0af3ce9111f0e562d8e8ee8d142f591bfc3
 
 ---
 
 ## 🎨 Phase 5 — React Frontend (Deepika + Rupam)
 
 ### 5a — Foundation & Routing (Rupam)
-- [ ] Install dependencies: `npm install react-router-dom axios socket.io-client recharts`
-- [ ] Set up `react-router-dom` with routes: `/login`, `/admin`, `/doctor`, `/patient`
-- [ ] Create `AuthContext` (stores JWT token, user role, expiry) using React Context API
-- [ ] Create `ProtectedRoute` component — redirects to `/login` if not authenticated
-- [ ] Create `src/api/` folder with Axios instance (base URL = `VITE_API_BASE_URL`, auto-attaches JWT)
+- [x] Install dependencies: `npm install react-router-dom axios socket.io-client recharts`
+- [x] Set up `react-router-dom` with routes: `/login`, `/admin`, `/doctor`, `/patient`
+- [x] Create `AuthContext` (stores JWT token, user role, expiry) using React Context API
+- [x] Create `ProtectedRoute` component — redirects to `/login` if not authenticated
+- [x] Create `src/api/` folder with Axios instance (base URL = `VITE_API_BASE_URL`, auto-attaches JWT)
 
 ### 5b — Login Page (Deepika)
-- [ ] Build `LoginPage.jsx` — email + password form, POST to `/api/auth/login`, store JWT in context
-- [ ] Show role-appropriate redirect after login (admin → `/admin`, doctor → `/doctor`, patient → `/patient`)
+- [x] Build `LoginPage.jsx` — email + password form, POST to `/api/auth/login`, store JWT in context
+- [x] Show role-appropriate redirect after login (admin → `/admin`, doctor → `/doctor`, patient → `/patient`)
 
 ### 5c — Admin Dashboard (Rupam)
-- [ ] Build `AdminPage.jsx` with three panels:
-  - [ ] **Users panel**: list users, create new user with role selector (admin/doctor/nurse/patient)
-  - [ ] **Device panel**: form to register RPi `device_id` and map to room number
-  - [ ] **Patient panel**: assign patient to room, assign doctor/nurse to patient
+- [x] Build `AdminPage.jsx` with three panels:
+  - [x] **Users panel**: list users, create new user with role selector (admin/doctor/nurse/patient)
+  - [x] **Device panel**: form to register RPi `device_id` and map to room number
+  - [x] **Patient panel**: assign patient to room, assign doctor/nurse to patient
 
 ### 5d — Doctor / Nurse Dashboard (Deepika)
-- [ ] Build `DoctorPage.jsx`:
-  - [ ] Left sidebar: list assigned patients, fetched from `/api/doctor/patients`
-  - [ ] On patient select: fetch recent ECG history from `/api/patients/<id>/ecg-history`
-  - [ ] Display BPM trend chart for last 24 hours using Recharts `LineChart`
-  - [ ] Display last prediction badge (Normal / ABNORMAL) + SQI indicator
-  - [ ] **Alert panel**: polls `/api/alerts?patient_id=<id>` every 30 seconds
-  - [ ] Alert banner: plays browser audio ping + red banner when unacknowledged ABNORMAL alert exists
-  - [ ] Acknowledge button: calls `POST /api/alerts/<id>/acknowledge`
+- [x] Build `DoctorPage.jsx`:
+  - [x] Left sidebar: list assigned patients, fetched from `/api/doctor/patients`
+  - [x] On patient select: fetch recent ECG history from `/api/patients/<id>/ecg-history`
+  - [x] Display BPM trend chart for last 24 hours using Recharts `LineChart`
+  - [x] Display last prediction badge (Normal / ABNORMAL) + SQI indicator
+  - [x] **Alert panel**: polls `/api/alerts?patient_id=<id>` every 30 seconds
+  - [x] Alert banner: plays browser audio ping + red banner when unacknowledged ABNORMAL alert exists
+  - [x] Acknowledge button: calls `POST /api/alerts/<id>/acknowledge`
 
 ### 5e — Patient Dashboard (Deepika)
-- [ ] Build `PatientPage.jsx`:
-  - [ ] Fetch personal info and ECG history from `/api/patients/me`
-  - [ ] Display BPM trend for last 24 hours using Recharts
-  - [ ] Display last ML prediction and timestamp
+- [x] Build `PatientPage.jsx`:
+  - [x] Fetch personal info and ECG history from `/api/patients/me`
+  - [x] Display BPM trend for last 24 hours using Recharts
+  - [x] Display last ML prediction and timestamp
 
 ### 5f — Deploy Frontend (Rupam)
 - [ ] Push `frontend/react_app/` to its own GitHub repo
@@ -237,26 +237,26 @@
 
 ### 5g-i — Demo Records to Pre-download (Satyarth)
 > All records are from the free MIT-BIH Arrhythmia Database (PhysioNet). `wfdb` downloads them automatically.
-- [ ] Add `wfdb>=4.1.0` to `backend/requirements.txt` ✅ (already done)
-- [ ] Pre-download and cache these 4 records on the RPi to avoid demo-day network issues:
+- [x] Add `wfdb>=4.1.0` to `backend/requirements.txt` ✅ (already done)
+- [x] Pre-download and cache these 4 records on the RPi to avoid demo-day network issues:
   - `100` — **Normal sinus rhythm** (healthy patient reference)
   - `119` — **PVCs** (Premature Ventricular Contractions — already default in simulator)
   - `200` — **Ventricular bigeminy** (every other beat is abnormal — most dramatic for demo)
   - `201` — **Atrial fibrillation + PVCs** (most complex, highest BPM variability)
-- [ ] Pre-download script: `python3 -c "import wfdb; [wfdb.dl_database('mitdb', dl_dir='demo_data', records=[r]) for r in ['100','119','200','201']]"`
-- [ ] Store downloaded records in `backend/demo_data/` (add `backend/demo_data/*.dat` and `*.hea` to `.gitignore`)
+- [x] Pre-download script: `python download_demo_data.py` (created at `backend/download_demo_data.py`)
+- [x] Store downloaded records in `backend/demo_data/` (add `backend/demo_data/*.dat` and `*.hea` to `.gitignore`)
 
 ### 5g-ii — Enhanced Demo API Endpoints (Satyarth — add to `server.py`)
-- [ ] Add `POST /api/demo/start` endpoint:
+- [x] Add `POST /api/demo/start` endpoint:
   - Accepts JSON: `{"record": "200", "mode": "mitbih"}` or `{"mode": "synthetic"}`
   - Stops any running engine, creates new `EcgSimulator` with chosen record, starts engine in demo mode
   - Returns `{"ok": true, "record": "200", "description": "Ventricular bigeminy — PVC every other beat"}`
-- [ ] Add `POST /api/demo/switch-to-arrhythmia` endpoint:
+- [x] Add `POST /api/demo/switch-to-arrhythmia` endpoint:
   - Mid-stream: replaces the current signal with record `200` (bigeminy) immediately
   - Used during live presentation: professor sees normal ECG → you click button → arrhythmia starts → alert fires
-- [ ] Add `GET /api/demo/records` endpoint:
+- [x] Add `GET /api/demo/records` endpoint:
   - Returns list of all available demo records with name, description, arrhythmia type, and expected model response
-- [ ] Add `GET /api/demo/ground-truth` endpoint:
+- [x] Add `GET /api/demo/ground-truth` endpoint:
   - Returns the MIT-BIH expert annotation for the current record at the current playback position (beat labels like `N`, `V`, `A`)
   - This lets you show professors: "MIT-BIH expert said V (PVC) here, our model says ABNORMAL here — they match"
 
@@ -280,21 +280,23 @@
 - [ ] Confirm alert appears on the Doctor's dashboard on the deployed Vercel URL
 - [ ] Open the Vercel frontend on a second device (phone or laptop) as the Doctor role — confirm alert banner appears
 - [ ] Charge RPi, have USB-C power bank as backup
-- [ ] Commit: `git commit -m "feat(demo): MIT-BIH demo mode API endpoints and control panel"`
+- [ ] Commit: `git commit -m "feat(demo): MIT-BIH demo mode API endpoints and control panel"` — done in `24891f7`
 
 ---
 
 ## 🚀 Phase 6 — Deployment & Integration Testing (Rupam + All)
 
 ### 6a — Deploy Cloud API to Render
-- [ ] Push `backend/cloud_api.py` + `backend/cloud_requirements.txt` + `backend/Procfile` to its own GitHub repo
-- [ ] Connect to [Render](https://render.com/) → New Web Service
-- [ ] Set start command: `python cloud_api.py`
-- [ ] Set all env variables: `MONGO_URI`, `JWT_SECRET`, `FLASK_SECRET_KEY`, `EDGE_KEY`
+- [x] Push `backend/cloud_api.py` + `backend/cloud_requirements.txt` + `backend/Procfile` to its own GitHub repo (`satyarth8/ecg-backend`)
+- [x] Connect to [Render](https://render.com/) → New Web Service → live at `https://ecg-backend-2n9c.onrender.com`
+- [x] Set start command: `gunicorn cloud_api:app --bind 0.0.0.0:$PORT`
+- [x] Set all env variables: `MONGO_URI`, `JWT_SECRET`, `FLASK_SECRET_KEY`, `EDGE_KEY`
+- [x] Admin user seeded in MongoDB (`admin@ecg.local` / `Admin@1234`)
+- [x] Login endpoint verified: `POST /api/auth/login` returns JWT ✅
 - [ ] Set up free cron job at [cron-job.org](https://cron-job.org) to ping `/api/status` every 10 min (keep Render awake)
 
 ### 6b — Configure RPi for Production
-- [ ] Update RPi `.env`: set `CLOUD_API_URL=https://<render-url>`, `EDGE_KEY=<shared secret>`
+- [x] Update RPi `.env`: set `CLOUD_API_URL=https://ecg-backend-2n9c.onrender.com`, `EDGE_KEY=<shared secret>`
 - [ ] Restart systemd service: `sudo systemctl restart ecg_edge`
 
 ### 6c — End-to-End Test Checklist
