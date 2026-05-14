@@ -2,7 +2,7 @@
 
 > **Final Year Project** — Edge AI on Raspberry Pi + React Web Dashboard + MongoDB Cloud
 > Slide: https://docs.google.com/presentation/d/1WCODxqY1NNHRyLQVIZKMnhqAkkMkOI6z_rHUC1bUbVA/edit?usp=sharing
-
+https://docs.google.com/presentation/d/1TkYRfWm5ueAqeKLgt7O9ZuyEE2wz-jzjRYnoaAk74RY/edit?usp=sharing
 ---
 
 ## 🔬 System Overview (v2 Edge AI)
